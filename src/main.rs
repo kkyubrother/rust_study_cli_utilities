@@ -24,7 +24,7 @@ fn main() {
         cmd_echo()
     }
     else if args[1].eq("cat") {
-        if args[2].eq("--help") || args[2].eq("-h") {
+        if args[2].eq("--help") || args.contains(&"-h".to_string()) {
             println!("사용 방법: cat [OPTION]... [FILE]...
 FILE을 표준 출력에 연결.
 
@@ -48,6 +48,16 @@ Examples:
   cat        Copy standard input to standard output.");
             process::exit(0);
         }
+        let show_all = args.contains(&"-A".to_string()) || args.contains(&"--show-all".to_string());
+        let show_end = args.contains(&"-E".to_string()) || args.contains(&"--show-ends".to_string()) || show_all;
+
+        let show_line_number_nonempty = args.contains(&"-b".to_string()) || args.contains(&"--number".to_string());
+        let show_line_number = if show_line_number_nonempty {
+            false
+        } else {
+            args.contains(&"-n".to_string()) || args.contains(&"--number-nonblank".to_string())
+        };
+
 
         println!("command cat");
 
@@ -60,7 +70,20 @@ Examples:
 
         if file_path.exists() {
             let contents = fs::read_to_string(&args[2]).expect("파일을 찾을 수 없습니다!");
-            println!("{}", contents);
+            for line in contents.split("\n") {
+                if show_line_number {
+                    print!("\t{}\t", 1);
+                } else if show_line_number_nonempty && line.len() > 0 {
+                    print!("\t{}\t", 1);
+                }
+
+                print!("{}", line);
+                if show_end {
+                    println!("$")
+                } else {
+                    println!()
+                }
+            }
         }
 
     }
